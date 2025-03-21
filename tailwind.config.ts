@@ -28,14 +28,42 @@ export default {
 				burgundy: {
 					DEFAULT: '#800020',
 					light: '#A30029',
-					dark: '#600018'
+					dark: '#600018',
+					muted: '#9B2242',
+					pale: '#C8A2A2',
+					50: '#FCE5E9',
+					100: '#F8CCD3',
+					200: '#E99AA7',
+					300: '#D9677B',
+					400: '#C94158',
+					500: '#A9243B',
+					600: '#8C1E32',
+					700: '#6F1829',
+					800: '#521220',
+					900: '#350C16'
 				},
 				gold: {
 					DEFAULT: '#D4AF37',
 					light: '#F1C232',
-					dark: '#B7922F'
+					dark: '#B7922F',
+					muted: '#DAC173',
+					pale: '#F2E8B3',
+					50: '#FBF8E9',
+					100: '#F7F0D4',
+					200: '#EFE2A9',
+					300: '#E7D47F',
+					400: '#DFC554',
+					500: '#D4AF37',
+					600: '#B7922F',
+					700: '#8D7123',
+					800: '#634F19',
+					900: '#3A2E0E'
 				},
-				cream: '#F5F5DC',
+				cream: {
+					DEFAULT: '#F5F5DC',
+					light: '#FFFFF0',
+					dark: '#E8E8C8'
+				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'

@@ -79,46 +79,90 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center px-5 py-2.5 bg-burgundy-dark hover:bg-burgundy text-white font-medium rounded-xl transition-colors shadow-sm;
+    @apply inline-flex items-center justify-center px-5 py-2.5 bg-burgundy-600 hover:bg-burgundy-500 text-white font-medium rounded-xl transition-colors shadow-sm;
   }
   
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-5 py-2.5 bg-gold hover:bg-gold-light text-white font-medium rounded-xl transition-colors shadow-sm;
+    @apply inline-flex items-center justify-center px-5 py-2.5 bg-gold-500 hover:bg-gold-400 text-white font-medium rounded-xl transition-colors shadow-sm;
   }
   
   .btn-outline {
-    @apply inline-flex items-center justify-center px-5 py-2.5 border border-burgundy text-burgundy hover:bg-burgundy hover:text-white font-medium rounded-xl transition-colors;
+    @apply inline-flex items-center justify-center px-5 py-2.5 border border-burgundy-500 text-burgundy-600 hover:bg-burgundy-50 hover:border-burgundy-600 hover:text-burgundy-700 font-medium rounded-xl transition-colors;
   }
   
   .glass-card {
-    @apply bg-white/95 backdrop-blur-sm border border-gray-100;
+    @apply bg-white/95 backdrop-blur-sm border border-gray-100 shadow-sm;
+  }
+
+  .glass-card-gold {
+    @apply bg-gold-50/90 backdrop-blur-sm border border-gold-100 shadow-gold;
+  }
+
+  .glass-card-burgundy {
+    @apply bg-burgundy-50/90 backdrop-blur-sm border border-burgundy-100 shadow-burgundy;
   }
 }
 
-/* Ajout de dégradés et couleurs supplémentaires */
+/* Refined gradients and colors */
 .bg-gradient-burgundy {
-  background: linear-gradient(135deg, #800020 0%, #A30029 100%);
+  background: linear-gradient(135deg, #800020 0%, #A9243B 70%, #C94158 100%);
 }
 
 .bg-gradient-gold {
-  background: linear-gradient(135deg, #D4AF37 0%, #F1C232 100%);
+  background: linear-gradient(135deg, #B7922F 0%, #D4AF37 50%, #F1C232 100%);
+}
+
+.bg-gradient-cream {
+  background: linear-gradient(135deg, #F5F5DC 0%, #FFFFF0 100%);
 }
 
 .bg-gradient-overlay {
-  background: linear-gradient(180deg, rgba(128, 0, 32, 0.7) 0%, rgba(212, 175, 55, 0.4) 100%);
+  background: linear-gradient(180deg, rgba(128, 0, 32, 0.8) 0%, rgba(169, 36, 59, 0.6) 50%, rgba(212, 175, 55, 0.4) 100%);
 }
 
-/* Animations supplémentaires */
+.bg-soft-burgundy {
+  background-color: rgba(128, 0, 32, 0.05);
+}
+
+.bg-soft-gold {
+  background-color: rgba(212, 175, 55, 0.05);
+}
+
+.text-gradient-burgundy {
+  background: linear-gradient(135deg, #800020 0%, #A9243B 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, #B7922F 0%, #F1C232 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Animations */
 @keyframes gentle-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
+}
+
+@keyframes soft-fade {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
 }
 
 .animate-gentle-pulse {
   animation: gentle-pulse 3s infinite ease-in-out;
 }
 
-/* Amélioration des ombres */
+.animate-soft-fade {
+  animation: soft-fade 4s infinite ease-in-out;
+}
+
+/* Enhanced shadows */
 .shadow-burgundy {
   box-shadow: 0 4px 20px -5px rgba(128, 0, 32, 0.25);
 }
@@ -127,7 +171,19 @@
   box-shadow: 0 4px 20px -5px rgba(212, 175, 55, 0.25);
 }
 
-/* Style pour les éléments interactifs */
+.shadow-cream {
+  box-shadow: 0 4px 20px -5px rgba(245, 245, 220, 0.5);
+}
+
+.shadow-burgundy-sm {
+  box-shadow: 0 2px 10px -3px rgba(128, 0, 32, 0.15);
+}
+
+.shadow-gold-sm {
+  box-shadow: 0 2px 10px -3px rgba(212, 175, 55, 0.15);
+}
+
+/* Interactive elements */
 .hover-lift {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -135,4 +191,42 @@
 .hover-lift:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.1);
+}
+
+.hover-glow-burgundy {
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-glow-burgundy:hover {
+  box-shadow: 0 0 15px rgba(128, 0, 32, 0.3);
+}
+
+.hover-glow-gold {
+  transition: box-shadow 0.3s ease;
+}
+
+.hover-glow-gold:hover {
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+/* Border utilities */
+.border-gradient-burgundy {
+  border: 2px solid;
+  border-image: linear-gradient(135deg, #800020, #C94158) 1;
+}
+
+.border-gradient-gold {
+  border: 2px solid;
+  border-image: linear-gradient(135deg, #B7922F, #F1C232) 1;
+}
+
+/* Focus effects */
+.focus-ring-burgundy:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.3);
+}
+
+.focus-ring-gold:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.3);
 }
