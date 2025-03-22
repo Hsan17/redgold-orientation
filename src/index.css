@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 340 50% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -71,8 +71,11 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-cream text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    background-image: radial-gradient(circle at top left, rgba(128, 0, 32, 0.05) 0%, transparent 60%),
+                      radial-gradient(circle at bottom right, rgba(212, 175, 55, 0.07) 0%, transparent 60%);
+    background-attachment: fixed;
   }
 }
 
@@ -90,7 +93,7 @@
   }
   
   .glass-card {
-    @apply bg-white/95 backdrop-blur-sm border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-md;
+    @apply bg-white/85 backdrop-blur-sm border border-burgundy-100 shadow-sm transition-all duration-300 hover:shadow-md;
   }
 
   .glass-card-gold {
@@ -199,6 +202,12 @@
     border: 2px solid;
     border-image: linear-gradient(135deg, #B7922F, #F1C232) 1;
   }
+
+  .border-duo-gradient {
+    border-image: linear-gradient(to right, #800020, #D4AF37) 1;
+    border-width: 2px;
+    border-style: solid;
+  }
 }
 
 /* Refined gradients and colors */
@@ -255,7 +264,25 @@
   color: transparent;
 }
 
-/* Animations */
+.bg-burgundy-pattern {
+  background-color: #FCEFF2;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23800020' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.bg-gold-pattern {
+  background-color: #FFFCF0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23D4AF37' fill-opacity='0.07'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.bg-cream-gradient {
+  background: linear-gradient(135deg, #FFFDF7 0%, #F8F1E0 100%);
+}
+
+.two-tone-bg {
+  background: linear-gradient(110deg, rgba(128, 0, 32, 0.03) 0%, rgba(212, 175, 55, 0.03) 100%);
+}
+
+/* Animation and new custom styles */
 @keyframes gentle-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
