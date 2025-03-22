@@ -23,6 +23,8 @@ const buttonVariants = cva(
         gold: "bg-gold-500 text-white hover:bg-gold-400 focus-visible:ring-gold-300",
         'outline-burgundy': "border border-burgundy-500 text-burgundy-600 hover:bg-burgundy-50 hover:border-burgundy-600 hover:text-burgundy-700",
         'outline-gold': "border border-gold-500 text-gold-600 hover:bg-gold-50 hover:border-gold-600 hover:text-gold-700",
+        'gradient-burgundy-gold': "bg-gradient-burgundy-gold text-white hover:opacity-90 focus-visible:ring-gold-300 transition-all duration-300",
+        'gradient-gold-burgundy': "bg-gradient-gold-burgundy text-white hover:opacity-90 focus-visible:ring-burgundy-300 transition-all duration-300",
       },
       size: {
         default: "h-10 px-4 py-2",
