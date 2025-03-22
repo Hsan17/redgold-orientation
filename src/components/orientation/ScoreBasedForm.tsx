@@ -1,7 +1,8 @@
-
-import React, { useState } from "react";
-import { CheckCircle, ChevronRight, ChevronLeft, Loader2, AlertCircle } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { CheckCircle, ChevronRight, ChevronLeft, Loader2, AlertCircle, Upload, Camera } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
 
 const ScoreBasedForm = () => {
   const [step, setStep] = useState(1);
@@ -19,8 +20,11 @@ const ScoreBasedForm = () => {
     preferredRegions: [] as string[],
   });
   const [loading, setLoading] = useState(false);
+  const [scanLoading, setScanLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [eligibilityResults, setEligibilityResults] = useState<any[] | null>(null);
+  const [showScanOption, setShowScanOption] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const totalSteps = 3;
 
@@ -126,6 +130,75 @@ const ScoreBasedForm = () => {
       setLoading(false);
       setIsSubmitted(true);
     }, 2000);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setScanLoading(true);
+    
+    // Simulate processing the image with a delay
+    setTimeout(() => {
+      // Mock data extraction from image
+      const extractedData = {
+        section: "mathématiques",
+        overallScore: "15.75",
+        mathScore: "17.50",
+        physicsScore: "16.25",
+        scienceScore: "15.00",
+        languageScore: "14.50"
+      };
+
+      setFormData(prev => ({
+        ...prev,
+        ...extractedData
+      }));
+
+      setScanLoading(false);
+      setShowScanOption(false);
+      
+      toast({
+        title: "Notes extraites avec succès",
+        description: "Les notes ont été extraites de votre document et ajoutées au formulaire.",
+        variant: "default",
+      });
+    }, 3000);
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleCamera = async () => {
+    setScanLoading(true);
+    
+    // Simulate camera capture and processing
+    setTimeout(() => {
+      // Mock data extraction from camera capture
+      const extractedData = {
+        section: "scientifique",
+        overallScore: "16.20",
+        mathScore: "16.75",
+        physicsScore: "17.00",
+        scienceScore: "16.50",
+        languageScore: "15.25"
+      };
+
+      setFormData(prev => ({
+        ...prev,
+        ...extractedData
+      }));
+
+      setScanLoading(false);
+      setShowScanOption(false);
+      
+      toast({
+        title: "Notes extraites avec succès",
+        description: "Les notes ont été extraites de votre document et ajoutées au formulaire.",
+        variant: "default",
+      });
+    }, 3000);
   };
   
   // Détermination des champs de score à afficher selon la section
@@ -392,7 +465,70 @@ const ScoreBasedForm = () => {
             {/* Step 1: Section et Notes */}
             {step === 1 && (
               <div className="space-y-6 animate-slide-up">
-                <h2 className="text-2xl font-serif font-semibold text-burgundy-dark mb-6">Votre profil académique</h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-serif font-semibold text-burgundy-dark">Votre profil académique</h2>
+                  
+                  <Button 
+                    type="button" 
+                    variant="outline-burgundy"
+                    onClick={() => setShowScanOption(!showScanOption)}
+                    className="flex items-center gap-2"
+                  >
+                    <Camera className="h-4 w-4" />
+                    Scanner mes notes
+                  </Button>
+                </div>
+                
+                {showScanOption && (
+                  <div className="mb-6 p-6 bg-burgundy-50 rounded-xl border border-burgundy-100 animate-fade-in">
+                    <h3 className="font-medium text-burgundy mb-4">Numériser vos notes</h3>
+                    
+                    {scanLoading ? (
+                      <div className="flex flex-col items-center justify-center p-8">
+                        <Loader2 className="h-10 w-10 text-burgundy animate-spin mb-4" />
+                        <p className="text-burgundy-dark">Analyse en cours...</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div 
+                          onClick={triggerFileInput}
+                          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-burgundy-200 rounded-lg cursor-pointer hover:bg-burgundy-50 transition-colors"
+                        >
+                          <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            onChange={handleFileUpload} 
+                            accept="image/*" 
+                            className="hidden" 
+                          />
+                          <Upload className="h-8 w-8 text-burgundy mb-2" />
+                          <p className="font-medium text-burgundy-dark">Télécharger une image</p>
+                          <p className="text-xs text-gray-500 text-center mt-1">
+                            Téléchargez une photo de votre relevé de notes
+                          </p>
+                        </div>
+                        
+                        <div 
+                          onClick={handleCamera}
+                          className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-burgundy-200 rounded-lg cursor-pointer hover:bg-burgundy-50 transition-colors"
+                        >
+                          <Camera className="h-8 w-8 text-burgundy mb-2" />
+                          <p className="font-medium text-burgundy-dark">Utiliser la caméra</p>
+                          <p className="text-xs text-gray-500 text-center mt-1">
+                            Prendre une photo de votre relevé de notes
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="mt-4 pt-4 border-t border-burgundy-100">
+                      <p className="text-sm text-burgundy-dark flex items-start gap-2">
+                        <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                        <span>Assurez-vous que le document est bien visible et que tous les scores sont lisibles pour une meilleure extraction.</span>
+                      </p>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="space-y-4">
                   <div>
