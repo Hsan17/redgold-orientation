@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { University, Scholarship, AdmissionCriteria } from '@/types/university';
 
@@ -13,6 +12,24 @@ export const TABLES = {
   SCHOLARSHIPS: 'scholarships',
   ADMISSION_CRITERIA: 'admission_criteria',
 };
+
+// Before using any API, try to ensure the database is accessible
+export async function checkDatabaseConnection(): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.from('_test_connection').select('*').limit(1);
+    if (error && error.code === '42P01') {
+      // Table doesn't exist error is expected and means connection works
+      return true;
+    } else if (error) {
+      console.error('Database connection error:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Unexpected database connection error:', err);
+    return false;
+  }
+}
 
 // Helper functions for type safety
 export async function fetchUniversities(): Promise<University[]> {
