@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { University, Scholarship, AdmissionCriteria } from '@/types/university';
-import { UniversityService, sampleData } from '@/services/universityService';
+import { UniversityService, sampleData } from '@/services/university';
 import { toast } from '@/components/ui/use-toast';
 
 export function useUniversities() {

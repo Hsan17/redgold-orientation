@@ -1,5 +1,5 @@
 
-import { UniversityService, sampleData } from '@/services/universityService';
+import { UniversityService, sampleData } from '@/services/university';
 
 export async function initializeSupabaseDatabase() {
   console.log('Initializing Supabase database with sample data...');
