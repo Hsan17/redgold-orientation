@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { University, Scholarship, AdmissionCriteria } from '@/types/university';
-import { UniversityService } from '@/services/universityService';
+import { UniversityService, sampleData } from '@/services/universityService';
+import { toast } from '@/components/ui/use-toast';
 
 export function useUniversities() {
   const [universities, setUniversities] = useState<University[]>([]);
@@ -9,8 +10,47 @@ export function useUniversities() {
   const [admissionCriteria, setAdmissionCriteria] = useState<AdmissionCriteria[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState<boolean>(false);
+
+  // Function to initialize database with sample data if needed
+  const initializeDatabase = async () => {
+    try {
+      setLoading(true);
+      // Check if we have data already
+      const existingUniversities = await UniversityService.getAllUniversities();
+      
+      if (existingUniversities.length === 0) {
+        // Initialize with sample data
+        await UniversityService.initializeDatabase(
+          sampleData.universities,
+          sampleData.internationalScholarships,
+          sampleData.admissionCriteria
+        );
+        
+        toast({
+          title: "Base de données initialisée",
+          description: "Les données d'exemple ont été ajoutées à la base de données Supabase.",
+        });
+      }
+      
+      setInitialized(true);
+    } catch (err) {
+      console.error('Error initializing database:', err);
+      setError('Erreur lors de l\'initialisation de la base de données. Veuillez réessayer plus tard.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
+    // Initialize the database first
+    initializeDatabase();
+  }, []);
+
+  useEffect(() => {
+    // Only load data after initialization
+    if (!initialized) return;
+    
     async function loadData() {
       try {
         setLoading(true);
@@ -33,7 +73,7 @@ export function useUniversities() {
     }
     
     loadData();
-  }, []);
+  }, [initialized]);
 
   // Function to get university recommendations
   const getRecommendations = async (preferences: {
@@ -61,6 +101,7 @@ export function useUniversities() {
     admissionCriteria,
     loading,
     error,
-    getRecommendations
+    getRecommendations,
+    initializeDatabase
   };
 }
