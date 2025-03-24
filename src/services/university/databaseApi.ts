@@ -1,4 +1,3 @@
-
 import { University, Scholarship, AdmissionCriteria } from "@/types/university";
 import { supabase, TABLES } from "@/lib/supabase";
 import { toast } from "@/components/ui/use-toast";
