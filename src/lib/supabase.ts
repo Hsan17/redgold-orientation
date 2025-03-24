@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { University, Scholarship, AdmissionCriteria } from '@/types/university';
 
@@ -6,110 +7,202 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Database table names
+// Noms des tables dans la base de données
 export const TABLES = {
   UNIVERSITIES: 'universities',
   SCHOLARSHIPS: 'scholarships',
   ADMISSION_CRITERIA: 'admission_criteria',
 };
 
-// Before using any API, try to ensure the database is accessible
+// Vérification de la connexion à la base de données
 export async function checkDatabaseConnection(): Promise<boolean> {
   try {
-    const { data, error } = await supabase.from('_test_connection').select('*').limit(1);
-    if (error && error.code === '42P01') {
-      // Table doesn't exist error is expected and means connection works
-      return true;
-    } else if (error) {
-      console.error('Database connection error:', error);
+    // Tenter une requête simple pour vérifier la connexion
+    const { data, error } = await supabase
+      .from(TABLES.UNIVERSITIES)
+      .select('count(*)', { count: 'exact', head: true });
+    
+    if (error) {
+      console.error('Erreur de connexion à la base de données:', error);
       return false;
     }
     return true;
   } catch (err) {
-    console.error('Unexpected database connection error:', err);
+    console.error('Erreur inattendue lors de la connexion à la base de données:', err);
     return false;
   }
 }
 
-// Helper functions for type safety
+// Fonctions d'accès aux données des universités avec une meilleure gestion des erreurs
 export async function fetchUniversities(): Promise<University[]> {
-  const { data, error } = await supabase
-    .from(TABLES.UNIVERSITIES)
-    .select('*');
-  
-  if (error) {
-    console.error('Error fetching universities:', error);
+  try {
+    const { data, error } = await supabase
+      .from(TABLES.UNIVERSITIES)
+      .select('*');
+    
+    if (error) {
+      console.error('Erreur lors de la récupération des universités:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Exception lors de la récupération des universités:', error);
     return [];
   }
-  
-  return data || [];
 }
 
 export async function fetchScholarships(): Promise<Scholarship[]> {
-  const { data, error } = await supabase
-    .from(TABLES.SCHOLARSHIPS)
-    .select('*');
-  
-  if (error) {
-    console.error('Error fetching scholarships:', error);
+  try {
+    const { data, error } = await supabase
+      .from(TABLES.SCHOLARSHIPS)
+      .select('*');
+    
+    if (error) {
+      console.error('Erreur lors de la récupération des bourses:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Exception lors de la récupération des bourses:', error);
     return [];
   }
-  
-  return data || [];
 }
 
 export async function fetchAdmissionCriteria(): Promise<AdmissionCriteria[]> {
-  const { data, error } = await supabase
-    .from(TABLES.ADMISSION_CRITERIA)
-    .select('*');
-  
-  if (error) {
-    console.error('Error fetching admission criteria:', error);
+  try {
+    const { data, error } = await supabase
+      .from(TABLES.ADMISSION_CRITERIA)
+      .select('*');
+    
+    if (error) {
+      console.error('Erreur lors de la récupération des critères d\'admission:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Exception lors de la récupération des critères d\'admission:', error);
     return [];
   }
-  
-  return data || [];
 }
 
 export async function fetchUniversitiesByRegion(region: string): Promise<University[]> {
-  const { data, error } = await supabase
-    .from(TABLES.UNIVERSITIES)
-    .select('*')
-    .eq('region', region);
-  
-  if (error) {
-    console.error('Error fetching universities by region:', error);
+  try {
+    const { data, error } = await supabase
+      .from(TABLES.UNIVERSITIES)
+      .select('*')
+      .eq('region', region);
+    
+    if (error) {
+      console.error('Erreur lors de la récupération des universités par région:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Exception lors de la récupération des universités par région:', error);
     return [];
   }
-  
-  return data || [];
 }
 
 export async function fetchUniversitiesByProgram(program: string): Promise<University[]> {
-  const { data, error } = await supabase
-    .from(TABLES.UNIVERSITIES)
-    .select('*')
-    .textSearch('programs', program, { type: 'plain' });
-  
-  if (error) {
-    console.error('Error fetching universities by program:', error);
+  try {
+    const { data, error } = await supabase
+      .from(TABLES.UNIVERSITIES)
+      .select('*')
+      .contains('programs', [program]);
+    
+    if (error) {
+      console.error('Erreur lors de la récupération des universités par programme:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Exception lors de la récupération des universités par programme:', error);
     return [];
   }
-  
-  return data || [];
 }
 
 export async function fetchUniversityById(id: string): Promise<University | null> {
-  const { data, error } = await supabase
-    .from(TABLES.UNIVERSITIES)
-    .select('*')
-    .eq('id', id)
-    .single();
-  
-  if (error) {
-    console.error('Error fetching university by id:', error);
+  try {
+    const { data, error } = await supabase
+      .from(TABLES.UNIVERSITIES)
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      console.error('Erreur lors de la récupération de l\'université par id:', error);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Exception lors de la récupération de l\'université par id:', error);
     return null;
   }
-  
-  return data;
+}
+
+// Nouvelles fonctions CRUD pour les universités
+export async function createUniversity(university: University): Promise<University | null> {
+  try {
+    const { data, error } = await supabase
+      .from(TABLES.UNIVERSITIES)
+      .insert(university)
+      .select('*')
+      .single();
+    
+    if (error) {
+      console.error('Erreur lors de la création de l\'université:', error);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Exception lors de la création de l\'université:', error);
+    return null;
+  }
+}
+
+export async function updateUniversity(university: University): Promise<University | null> {
+  try {
+    const { data, error } = await supabase
+      .from(TABLES.UNIVERSITIES)
+      .update(university)
+      .eq('id', university.id)
+      .select('*')
+      .single();
+    
+    if (error) {
+      console.error('Erreur lors de la mise à jour de l\'université:', error);
+      return null;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Exception lors de la mise à jour de l\'université:', error);
+    return null;
+  }
+}
+
+export async function deleteUniversity(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from(TABLES.UNIVERSITIES)
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Erreur lors de la suppression de l\'université:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Exception lors de la suppression de l\'université:', error);
+    return false;
+  }
 }
