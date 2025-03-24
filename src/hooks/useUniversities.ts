@@ -68,6 +68,50 @@ export const useUniversities = () => {
     fetchData();
   }, [toast]);
 
+  // Function to get recommendations based on preferences
+  const getRecommendations = async (preferences: {
+    programs?: string[];
+    region?: string;
+    specializations?: string[];
+    international?: boolean;
+  }): Promise<University[]> => {
+    try {
+      // Try to get recommendations from the service
+      return await UniversityService.getRecommendedUniversities(preferences);
+    } catch (err) {
+      console.error("Error getting recommendations:", err);
+      
+      // If that fails, filter the local universities array
+      let results = [...universities];
+      
+      if (preferences.international !== undefined) {
+        results = results.filter(u => !!u.international === preferences.international);
+      }
+      
+      if (preferences.region) {
+        results = results.filter(u => u.region === preferences.region);
+      }
+      
+      if (preferences.programs && preferences.programs.length > 0) {
+        results = results.filter(university => 
+          university.programs.some(program => 
+            preferences.programs?.some(p => program.toLowerCase().includes(p.toLowerCase()))
+          )
+        );
+      }
+      
+      if (preferences.specializations && preferences.specializations.length > 0) {
+        results = results.filter(university => 
+          university.specializations.some(spec => 
+            preferences.specializations?.some(s => spec.toLowerCase().includes(s.toLowerCase()))
+          )
+        );
+      }
+      
+      return results;
+    }
+  };
+
   // Function to reinitialize the database with sample data
   const reinitializeDatabase = async () => {
     try {
@@ -117,6 +161,7 @@ export const useUniversities = () => {
     admissionCriteria,
     loading,
     error,
-    reinitializeDatabase
+    reinitializeDatabase,
+    getRecommendations
   };
 };

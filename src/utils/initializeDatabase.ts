@@ -127,11 +127,7 @@ export async function initializeSupabaseDatabase() {
     await createTables();
     
     // Then initialize with sample data
-    await UniversityService.initializeDatabase(
-      sampleData.universities,
-      sampleData.internationalScholarships,
-      sampleData.admissionCriteria
-    );
+    await UniversityService.initializeDatabase();
     
     console.log('Database initialization completed successfully!');
     toast({

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, ReactNode, useState } from 'react';
-import { useUniversities } from '@/hooks/useUniversities';
 import { University } from '@/types/university';
+import { UniversityService } from '@/services/university';
 
 type UserPreferences = {
   programs?: string[];
@@ -21,8 +21,22 @@ type RecommendationContextType = {
 const RecommendationContext = createContext<RecommendationContextType | undefined>(undefined);
 
 export const RecommendationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { loading, error, getRecommendations } = useUniversities();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [userPreferences, setUserPreferences] = useState<UserPreferences | null>(null);
+
+  const getRecommendations = async (preferences: UserPreferences): Promise<University[]> => {
+    try {
+      setLoading(true);
+      const recommendations = await UniversityService.getRecommendedUniversities(preferences);
+      return recommendations;
+    } catch (err) {
+      setError(`Erreur: ${err instanceof Error ? err.message : String(err)}`);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const saveUserPreferences = (preferences: UserPreferences) => {
     setUserPreferences(preferences);

@@ -93,39 +93,54 @@ export const createTables = async (): Promise<boolean> => {
     
     console.log("Creating tables...");
     
-    // Create universities table
-    const createUniversitiesTable = await supabase.rpc('create_universities_table')
-      .catch(async () => {
-        // Fallback: Create table using SQL
-        return supabase.from('universities').select('id').limit(1);
-      });
-    
-    if (createUniversitiesTable.error) {
-      console.error("Error creating universities table:", createUniversitiesTable.error);
+    // Create universities table - refactored to handle errors properly
+    try {
+      const { error: universitiesError } = await supabase.rpc('create_universities_table');
+      if (universitiesError) {
+        console.warn("RPC method failed, trying direct table access:", universitiesError);
+        // Fallback: Create table using SQL or check if it exists
+        const { error: fallbackError } = await supabase.from('universities').select('id').limit(1);
+        if (fallbackError && fallbackError.code !== '42P01') { // Code 42P01 means table doesn't exist, which is expected
+          console.error("Universities table creation error:", fallbackError);
+          return false;
+        }
+      }
+    } catch (err) {
+      console.error("Error creating universities table:", err);
       return false;
     }
     
-    // Create scholarships table
-    const createScholarshipsTable = await supabase.rpc('create_scholarships_table')
-      .catch(async () => {
-        // Fallback: Create table using SQL
-        return supabase.from('scholarships').select('id').limit(1);
-      });
-    
-    if (createScholarshipsTable.error) {
-      console.error("Error creating scholarships table:", createScholarshipsTable.error);
+    // Create scholarships table - refactored to handle errors properly
+    try {
+      const { error: scholarshipsError } = await supabase.rpc('create_scholarships_table');
+      if (scholarshipsError) {
+        console.warn("RPC method failed, trying direct table access:", scholarshipsError);
+        // Fallback: Create table using SQL or check if it exists
+        const { error: fallbackError } = await supabase.from('scholarships').select('id').limit(1);
+        if (fallbackError && fallbackError.code !== '42P01') { // Code 42P01 means table doesn't exist, which is expected
+          console.error("Scholarships table creation error:", fallbackError);
+          return false;
+        }
+      }
+    } catch (err) {
+      console.error("Error creating scholarships table:", err);
       return false;
     }
     
-    // Create admission criteria table
-    const createAdmissionCriteriaTable = await supabase.rpc('create_admission_criteria_table')
-      .catch(async () => {
-        // Fallback: Create table using SQL
-        return supabase.from('admission_criteria').select('id').limit(1);
-      });
-    
-    if (createAdmissionCriteriaTable.error) {
-      console.error("Error creating admission criteria table:", createAdmissionCriteriaTable.error);
+    // Create admission criteria table - refactored to handle errors properly
+    try {
+      const { error: admissionError } = await supabase.rpc('create_admission_criteria_table');
+      if (admissionError) {
+        console.warn("RPC method failed, trying direct table access:", admissionError);
+        // Fallback: Create table using SQL or check if it exists
+        const { error: fallbackError } = await supabase.from('admission_criteria').select('id').limit(1);
+        if (fallbackError && fallbackError.code !== '42P01') { // Code 42P01 means table doesn't exist, which is expected
+          console.error("Admission criteria table creation error:", fallbackError);
+          return false;
+        }
+      }
+    } catch (err) {
+      console.error("Error creating admission criteria table:", err);
       return false;
     }
     
@@ -214,14 +229,19 @@ export const forceReinitializeDatabase = async (): Promise<boolean> => {
     
     // Drop existing tables
     for (const table of [TABLES.UNIVERSITIES, TABLES.SCHOLARSHIPS, TABLES.ADMISSION_CRITERIA]) {
-      const { error } = await supabase.rpc('drop_table_if_exists', { table_name: table })
-        .catch(async () => {
-          // Fallback: Drop table using SQL
-          return supabase.from(table).delete().gt('id', 0);
-        });
-      
-      if (error) {
-        console.error(`Error dropping table ${table}:`, error);
+      try {
+        const { error } = await supabase.rpc('drop_table_if_exists', { table_name: table });
+        
+        if (error) {
+          console.warn(`RPC error dropping table ${table}:`, error);
+          // Fallback: Drop table using direct SQL if possible
+          const { error: fallbackError } = await supabase.from(table).delete().gt('id', '0');
+          if (fallbackError && fallbackError.code !== '42P01') { // Not finding the table is ok
+            console.error(`Error dropping table ${table}:`, fallbackError);
+          }
+        }
+      } catch (err) {
+        console.error(`Exception when dropping table ${table}:`, err);
       }
     }
     
