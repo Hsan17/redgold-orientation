@@ -23,7 +23,7 @@ import {
 
 import { getAllAdmissionCriteria, getAdmissionCriteriaBySection } from './admissionApi';
 import { getRecommendedUniversities } from './recommendationApi';
-import { initializeDatabase, checkTablesExist, createTables, checkDataExists } from './databaseApi';
+import { initializeDatabase, checkTablesExist, createTables, checkDataExists, forceReinitializeDatabase } from './databaseApi';
 import { verifyAndInitializeDatabase, generateDatabaseReport } from './dbVerification';
 import { sampleData } from './sampleData';
 
@@ -60,6 +60,7 @@ export const UniversityService = {
   checkTablesExist,
   createTables,
   checkDataExists,
+  forceReinitializeDatabase,
   verifyAndInitializeDatabase,
   generateDatabaseReport
 };
