@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,29 @@ export default {
 				cream: {
 					DEFAULT: '#F5F5DC',
 					light: '#FFFFF0',
-					dark: '#E8E8C8'
+					dark: '#E8E8C8',
+					50: '#FEFEF8',
+					100: '#FDFDF0',
+					200: '#FAFAE8',
+					300: '#F7F7E0',
+					400: '#F5F5DC',
+					500: '#EBEBB0',
+					600: '#E0E08C',
+					700: '#D2D268',
+					800: '#C0C048',
+					900: '#A8A840'
+				},
+				gray: {
+					50: '#f9fafb',
+					100: '#f3f4f6',
+					200: '#e5e7eb',
+					300: '#d1d5db',
+					400: '#9ca3af',
+					500: '#6b7280',
+					600: '#4b5563',
+					700: '#374151',
+					800: '#1f2937',
+					900: '#111827',
 				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
@@ -159,6 +182,11 @@ export default {
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
 				serif: ['Playfair Display', 'serif']
+			},
+			backgroundImage: {
+				'gradient-luxury': 'linear-gradient(135deg, #f5f5dc 0%, #fffef7 50%, #f8f3e1 100%)',
+				'gradient-burgundy-gold': 'linear-gradient(135deg, #800020 0%, #A9243B 50%, #D4AF37 100%)',
+				'gradient-gold-burgundy': 'linear-gradient(135deg, #F1C232 0%, #D4AF37 50%, #800020 100%)',
 			}
 		}
 	},

@@ -73,11 +73,12 @@
 
 .filter-chip-inactive {
   background-color: rgba(0, 0, 0, 0.05);
-  color: #666;
+  color: #333333;
 }
 
 .filter-chip:hover {
   transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(212, 175, 55, 0.15);
 }
 
 .hover-lift {
