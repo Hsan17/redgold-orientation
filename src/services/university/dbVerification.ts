@@ -1,87 +1,125 @@
 
-import { checkTablesExist, createTables, checkDataExists, initializeDatabase } from "./databaseApi";
 import { supabase } from "@/lib/supabase";
-import { sampleData } from "./sampleData";
+import { initializeDatabase, checkTablesExist, checkDataExists, TABLES } from "./databaseApi";
 
 /**
- * Vérifie la connexion à Supabase et initialise la base de données si nécessaire
+ * Verify that the database is properly set up and initialize it if needed
  */
-export async function verifyAndInitializeDatabase(): Promise<boolean> {
-  console.log('Vérification et initialisation de la base de données...');
-  
+export const verifyAndInitializeDatabase = async (): Promise<{ 
+  initialized: boolean; 
+  error?: string;
+}> => {
   try {
-    // Vérifier d'abord la connexion à Supabase
-    const { data, error } = await supabase.auth.getSession();
+    console.log("Verifying database setup...");
     
-    if (error) {
-      console.error('Erreur de connexion à Supabase:', error);
-      throw new Error('La connexion à Supabase a échoué. Veuillez vérifier vos identifiants.');
+    // First, check Supabase connection
+    const { data: connectionCheck, error: connectionError } = await supabase.from('_connector_health').select('*').limit(1);
+    
+    if (connectionError) {
+      console.error("Unable to connect to Supabase:", connectionError);
+      return { 
+        initialized: false, 
+        error: `Connexion Supabase échouée: ${connectionError.message}` 
+      };
     }
     
-    // Vérifier si les tables existent
+    // Check if tables exist
     const tablesExist = await checkTablesExist();
     if (!tablesExist) {
-      console.log('Les tables n\'existent pas, création...');
-      const tablesCreated = await createTables();
-      if (!tablesCreated) {
-        console.error('Impossible de créer les tables.');
-        return false;
-      }
+      console.log("Tables don't exist, initializing database...");
+      const initialized = await initializeDatabase();
+      
+      return { 
+        initialized, 
+        error: initialized ? undefined : "Échec d'initialisation des tables"
+      };
     }
     
-    // Vérifier si les données existent
+    // Check if data exists
     const dataExists = await checkDataExists();
     if (!dataExists) {
-      console.log('Aucune donnée présente, initialisation avec des données d\'exemple...');
-      const dataInitialized = await initializeDatabase(
-        sampleData.universities,
-        sampleData.scholarships,
-        sampleData.admissionCriteria
-      );
-      if (!dataInitialized) {
-        console.error('Impossible d\'initialiser les données.');
-        return false;
+      console.log("Tables exist but no data, initializing data...");
+      const initialized = await initializeDatabase();
+      
+      return { 
+        initialized, 
+        error: initialized ? undefined : "Échec d'initialisation des données"
+      };
+    }
+    
+    console.log("Database verification complete - all good!");
+    return { initialized: true };
+  } catch (error) {
+    console.error("Error verifying database:", error);
+    return { 
+      initialized: false, 
+      error: `Erreur de vérification: ${error instanceof Error ? error.message : String(error)}`
+    };
+  }
+};
+
+/**
+ * Generate a report about the database status
+ */
+export const generateDatabaseReport = async (): Promise<{
+  connected: boolean;
+  tablesExist: boolean;
+  dataExists: boolean;
+  tableStats: {
+    [key: string]: {
+      exists: boolean;
+      rowCount: number;
+    };
+  };
+}> => {
+  const report = {
+    connected: false,
+    tablesExist: false,
+    dataExists: false,
+    tableStats: {
+      [TABLES.UNIVERSITIES]: { exists: false, rowCount: 0 },
+      [TABLES.SCHOLARSHIPS]: { exists: false, rowCount: 0 },
+      [TABLES.ADMISSION_CRITERIA]: { exists: false, rowCount: 0 },
+    }
+  };
+  
+  try {
+    // Check connection
+    const { data: connectionCheck, error: connectionError } = await supabase.from('_connector_health').select('*').limit(1);
+    report.connected = !connectionError;
+    
+    if (!report.connected) {
+      return report;
+    }
+    
+    // Check tables exist
+    report.tablesExist = await checkTablesExist();
+    
+    if (!report.tablesExist) {
+      return report;
+    }
+    
+    // Check data exists
+    report.dataExists = await checkDataExists();
+    
+    // Get table stats
+    for (const table of [TABLES.UNIVERSITIES, TABLES.SCHOLARSHIPS, TABLES.ADMISSION_CRITERIA]) {
+      try {
+        const { data, error, count } = await supabase
+          .from(table)
+          .select('*', { count: 'exact' })
+          .limit(0);
+        
+        report.tableStats[table].exists = !error;
+        report.tableStats[table].rowCount = count || 0;
+      } catch (e) {
+        console.error(`Error getting stats for table ${table}:`, e);
       }
     }
     
-    return true;
+    return report;
   } catch (error) {
-    console.error('Erreur lors de la vérification et initialisation de la base de données:', error);
-    return false;
+    console.error("Error generating database report:", error);
+    return report;
   }
-}
-
-/**
- * Génère un rapport sur l'état de la base de données
- */
-export async function generateDatabaseReport(): Promise<void> {
-  console.log('Génération du rapport de la base de données...');
-  
-  try {
-    // Vérifier la connexion à Supabase
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) {
-      console.error('Erreur de connexion à Supabase:', sessionError);
-      return;
-    }
-    
-    // Compter les enregistrements dans chaque table
-    const [universities, scholarships, admissionCriteria] = await Promise.all([
-      supabase.from(TABLES.UNIVERSITIES).select('*', { count: 'exact', head: true }),
-      supabase.from(TABLES.SCHOLARSHIPS).select('*', { count: 'exact', head: true }),
-      supabase.from(TABLES.ADMISSION_CRITERIA).select('*', { count: 'exact', head: true })
-    ]);
-    
-    console.log('Rapport de la base de données:');
-    console.log(`- Universités: ${universities.count || 'Erreur'}`);
-    console.log(`- Bourses: ${scholarships.count || 'Erreur'}`);
-    console.log(`- Critères d'admission: ${admissionCriteria.count || 'Erreur'}`);
-    
-    // Vérifier les erreurs
-    if (universities.error) console.error('Erreur lors du comptage des universités:', universities.error);
-    if (scholarships.error) console.error('Erreur lors du comptage des bourses:', scholarships.error);
-    if (admissionCriteria.error) console.error('Erreur lors du comptage des critères d\'admission:', admissionCriteria.error);
-  } catch (error) {
-    console.error('Erreur lors de la génération du rapport:', error);
-  }
-}
+};

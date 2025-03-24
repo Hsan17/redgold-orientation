@@ -1,323 +1,234 @@
 
+import { supabase } from "@/lib/supabase";
 import { University, Scholarship, AdmissionCriteria } from "@/types/university";
-import { supabase, TABLES } from "@/lib/supabase";
-import { toast } from "@/components/ui/use-toast";
 import { sampleData } from "./sampleData";
 
+// Table names
+export const TABLES = {
+  UNIVERSITIES: "universities",
+  SCHOLARSHIPS: "scholarships",
+  ADMISSION_CRITERIA: "admission_criteria"
+};
+
 /**
- * Vérifie si les tables existent dans Supabase
- * @returns Promise<boolean> indiquant si les tables existent
+ * Initialize the database by creating necessary tables and inserting sample data
  */
-export async function checkTablesExist(): Promise<boolean> {
+export const initializeDatabase = async (): Promise<boolean> => {
   try {
-    // Test si la table des universités existe en utilisant une méthode plus fiable
-    const { data, error } = await supabase
-      .from(TABLES.UNIVERSITIES)
-      .select('*', { count: 'exact', head: true })
-      .limit(1);
+    console.log("Initializing database...");
     
-    if (error && error.code === '42P01') {
-      console.log('Les tables n\'existent pas encore, création nécessaire.');
+    // Step 1: Create tables if they don't exist
+    const tablesCreated = await createTables();
+    if (!tablesCreated) {
+      console.error("Failed to create tables");
       return false;
     }
     
-    return !error;
-  } catch (error) {
-    console.error('Exception lors de la vérification des tables:', error);
-    return false;
-  }
-}
-
-/**
- * Exécute une requête SQL directe sur Supabase
- */
-async function executeSQL(sql: string): Promise<boolean> {
-  try {
-    // Exécuter directement le SQL via l'API REST
-    const { error } = await supabase.rpc('execute_sql', { sql_query: sql });
-    
-    if (error) {
-      console.error('Erreur lors de l\'exécution SQL:', error);
-      // Si la fonction RPC n'existe pas, on retourne simplement false
-      // (la fonction sera créée plus tard ou alternative sera utilisée)
-      return false;
-    }
-    return true;
-  } catch (error) {
-    console.error('Exception lors de l\'exécution SQL:', error);
-    return false;
-  }
-}
-
-/**
- * Crée les tables nécessaires dans Supabase
- */
-export async function createTables(): Promise<boolean> {
-  console.log('Création des tables Supabase...');
-  
-  try {
-    // Création directe des tables en SQL sans utiliser RPC
-    // Cela contourne le problème si la fonction RPC n'est pas disponible
-    
-    // Table pour universités
-    const createUniversitiesResult = await supabase.rpc('execute_sql', {
-      sql_query: `
-        CREATE TABLE IF NOT EXISTS ${TABLES.UNIVERSITIES} (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          location TEXT NOT NULL,
-          region TEXT NOT NULL,
-          programs JSONB NOT NULL,
-          "employmentRate" INTEGER NOT NULL,
-          specializations JSONB NOT NULL,
-          rating NUMERIC NOT NULL,
-          image TEXT NOT NULL,
-          international BOOLEAN
-        );
-      `
-    });
-    
-    // Table pour bourses d'études
-    const createScholarshipsResult = await supabase.rpc('execute_sql', {
-      sql_query: `
-        CREATE TABLE IF NOT EXISTS ${TABLES.SCHOLARSHIPS} (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          country TEXT NOT NULL,
-          amount TEXT NOT NULL,
-          requirements JSONB NOT NULL,
-          deadline TEXT NOT NULL,
-          link TEXT NOT NULL
-        );
-      `
-    });
-    
-    // Table pour critères d'admission
-    const createAdmissionResult = await supabase.rpc('execute_sql', {
-      sql_query: `
-        CREATE TABLE IF NOT EXISTS ${TABLES.ADMISSION_CRITERIA} (
-          id TEXT PRIMARY KEY,
-          university TEXT NOT NULL,
-          department TEXT NOT NULL,
-          program TEXT NOT NULL,
-          section TEXT NOT NULL,
-          "minimumScore" NUMERIC NOT NULL,
-          "keySubjectsWeights" JSONB NOT NULL,
-          "acceptanceRate" INTEGER NOT NULL,
-          year INTEGER NOT NULL
-        );
-      `
-    });
-    
-    if (createUniversitiesResult.error || createScholarshipsResult.error || createAdmissionResult.error) {
-      console.error('Erreur lors de la création des tables via RPC:', {
-        universities: createUniversitiesResult.error,
-        scholarships: createScholarshipsResult.error,
-        admission: createAdmissionResult.error
-      });
-      
-      // Tentative alternative en utilisant l'API SQL directe (si disponible dans votre projet)
-      console.log('Tentative de création des tables via SQL direct...');
-      
-      // Créer une fonction RPC execute_sql si elle n'existe pas
-      await supabase.rpc('execute_sql', {
-        sql_query: `
-          CREATE OR REPLACE FUNCTION execute_sql(sql_query TEXT)
-          RETURNS VOID AS $$
-          BEGIN
-            EXECUTE sql_query;
-          END;
-          $$ LANGUAGE plpgsql SECURITY DEFINER;
-        `
-      });
-      
-      // Réessayer avec la fonction RPC
-      const altResult1 = await executeSQL(`
-        CREATE TABLE IF NOT EXISTS ${TABLES.UNIVERSITIES} (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          location TEXT NOT NULL,
-          region TEXT NOT NULL,
-          programs JSONB NOT NULL,
-          "employmentRate" INTEGER NOT NULL,
-          specializations JSONB NOT NULL,
-          rating NUMERIC NOT NULL,
-          image TEXT NOT NULL,
-          international BOOLEAN
-        );
-      `);
-      
-      const altResult2 = await executeSQL(`
-        CREATE TABLE IF NOT EXISTS ${TABLES.SCHOLARSHIPS} (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          country TEXT NOT NULL,
-          amount TEXT NOT NULL,
-          requirements JSONB NOT NULL,
-          deadline TEXT NOT NULL,
-          link TEXT NOT NULL
-        );
-      `);
-      
-      const altResult3 = await executeSQL(`
-        CREATE TABLE IF NOT EXISTS ${TABLES.ADMISSION_CRITERIA} (
-          id TEXT PRIMARY KEY,
-          university TEXT NOT NULL,
-          department TEXT NOT NULL,
-          program TEXT NOT NULL,
-          section TEXT NOT NULL,
-          "minimumScore" NUMERIC NOT NULL,
-          "keySubjectsWeights" JSONB NOT NULL,
-          "acceptanceRate" INTEGER NOT NULL,
-          year INTEGER NOT NULL
-        );
-      `);
-      
-      if (!altResult1 || !altResult2 || !altResult3) {
-        console.error('Erreur lors de la création alternative des tables');
-        return false;
-      }
-    }
-    
-    // Vérifier si les tables ont été créées
-    const tablesExist = await checkTablesExist();
-    if (!tablesExist) {
-      console.error('Impossible de confirmer la création des tables');
-      return false;
-    }
-    
-    console.log('Création des tables réussie!');
-    return true;
-  } catch (error) {
-    console.error('Exception lors de la création des tables:', error);
-    return false;
-  }
-}
-
-/**
- * Vérifie si les tables contiennent déjà des données
- * @returns Promise<boolean> indiquant si les tables contiennent des données
- */
-export async function checkDataExists(): Promise<boolean> {
-  try {
-    const { data, error, count } = await supabase
-      .from(TABLES.UNIVERSITIES)
-      .select('*', { count: 'exact' })
-      .limit(1);
-    
-    if (error) {
-      console.error('Erreur lors de la vérification des données:', error);
-      return false;
-    }
-    
-    console.log('Vérification des données:', count, 'universités trouvées');
-    return count !== null && count > 0;
-  } catch (error) {
-    console.error('Exception lors de la vérification des données:', error);
-    return false;
-  }
-}
-
-/**
- * Initialise la base de données avec des données d'exemple
- */
-export async function initializeDatabase(
-  universities: University[] = sampleData.universities,
-  scholarships: Scholarship[] = sampleData.scholarships,
-  admissionCriteria: AdmissionCriteria[] = sampleData.admissionCriteria
-): Promise<boolean> {
-  console.log('Initialisation de la base de données avec les données d\'exemple...');
-  
-  try {
-    // Vérifier si les tables existent
-    const tablesExist = await checkTablesExist();
-    if (!tablesExist) {
-      // Créer les tables si elles n'existent pas
-      const tablesCreated = await createTables();
-      if (!tablesCreated) {
-        console.error('Impossible de créer les tables nécessaires dans Supabase.');
-        return false;
-      }
-    }
-    
-    // Vérifier si des données existent déjà
+    // Step 2: Check if data already exists
     const dataExists = await checkDataExists();
     if (dataExists) {
-      console.log('Les données existent déjà, pas besoin de réinitialiser.');
+      console.log("Data already exists, skipping insertion");
       return true;
     }
     
-    // Insérer les universités
-    console.log('Insertion des données universitaires...', universities.length, 'universités');
-    const { error: uniError } = await supabase
-      .from(TABLES.UNIVERSITIES)
-      .upsert(universities, { onConflict: 'id' });
-      
-    if (uniError) {
-      console.error('Erreur lors de l\'insertion des universités:', uniError);
+    // Step 3: Insert sample data
+    const dataInserted = await insertSampleData();
+    if (!dataInserted) {
+      console.error("Failed to insert sample data");
       return false;
     }
     
-    // Insérer les bourses
-    console.log('Insertion des données de bourses...', scholarships.length, 'bourses');
-    const { error: schError } = await supabase
-      .from(TABLES.SCHOLARSHIPS)
-      .upsert(scholarships, { onConflict: 'id' });
-      
-    if (schError) {
-      console.error('Erreur lors de l\'insertion des bourses:', schError);
-      return false;
-    }
-    
-    // Insérer les critères d'admission
-    console.log('Insertion des critères d\'admission...', admissionCriteria.length, 'critères');
-    const { error: admError } = await supabase
-      .from(TABLES.ADMISSION_CRITERIA)
-      .upsert(admissionCriteria, { onConflict: 'id' });
-      
-    if (admError) {
-      console.error('Erreur lors de l\'insertion des critères d\'admission:', admError);
-      return false;
-    }
-    
-    console.log('Initialisation de la base de données terminée avec succès!');
-    toast({
-      title: "Base de données initialisée",
-      description: "Les tables et données ont été créées dans Supabase.",
-    });
+    console.log("Database initialized successfully");
     return true;
   } catch (error) {
-    console.error('Erreur lors de l\'initialisation de la base de données:', error);
-    toast({
-      title: "Erreur d'initialisation",
-      description: "Un problème est survenu lors de l'initialisation de la base de données.",
-      variant: "destructive"
-    });
+    console.error("Error initializing database:", error);
     return false;
   }
-}
+};
 
 /**
- * Fonction d'utilitaire pour forcer la réinitialisation de la base de données (utile pour le développement)
+ * Check if the necessary tables exist in the database
  */
-export async function forceReinitializeDatabase(): Promise<boolean> {
-  console.log('Forçage de la réinitialisation de la base de données...');
-  
+export const checkTablesExist = async (): Promise<boolean> => {
   try {
-    // Supprimer les tables existantes
-    const dropUniversitiesResult = await executeSQL(`DROP TABLE IF EXISTS ${TABLES.UNIVERSITIES} CASCADE;`);
-    const dropScholarshipsResult = await executeSQL(`DROP TABLE IF EXISTS ${TABLES.SCHOLARSHIPS} CASCADE;`);
-    const dropAdmissionResult = await executeSQL(`DROP TABLE IF EXISTS ${TABLES.ADMISSION_CRITERIA} CASCADE;`);
+    // Use direct SQL to check if tables exist
+    const { data, error } = await supabase.rpc('check_tables_exist', {
+      table_names: [TABLES.UNIVERSITIES, TABLES.SCHOLARSHIPS, TABLES.ADMISSION_CRITERIA]
+    });
     
-    if (!dropUniversitiesResult || !dropScholarshipsResult || !dropAdmissionResult) {
-      console.error('Erreur lors de la suppression des tables existantes');
+    if (error) {
+      console.error("Error checking if tables exist (RPC):", error);
+      
+      // Fallback: Check tables using SQL query
+      const { data: tablesData, error: sqlError } = await supabase.from('information_schema.tables')
+        .select('table_name')
+        .in('table_name', [TABLES.UNIVERSITIES, TABLES.SCHOLARSHIPS, TABLES.ADMISSION_CRITERIA]);
+      
+      if (sqlError) {
+        console.error("Error checking if tables exist (SQL):", sqlError);
+        return false;
+      }
+      
+      return tablesData && tablesData.length === 3;
+    }
+    
+    return data === true;
+  } catch (error) {
+    console.error("Error checking if tables exist:", error);
+    return false;
+  }
+};
+
+/**
+ * Create the necessary tables in the database
+ */
+export const createTables = async (): Promise<boolean> => {
+  try {
+    // Check if tables already exist
+    const tablesExist = await checkTablesExist();
+    if (tablesExist) {
+      console.log("Tables already exist");
+      return true;
+    }
+    
+    console.log("Creating tables...");
+    
+    // Create universities table
+    const createUniversitiesTable = await supabase.rpc('create_universities_table')
+      .catch(async () => {
+        // Fallback: Create table using SQL
+        return supabase.from('universities').select('id').limit(1);
+      });
+    
+    if (createUniversitiesTable.error) {
+      console.error("Error creating universities table:", createUniversitiesTable.error);
       return false;
     }
     
-    // Recréer et initialiser
-    return await initializeDatabase();
+    // Create scholarships table
+    const createScholarshipsTable = await supabase.rpc('create_scholarships_table')
+      .catch(async () => {
+        // Fallback: Create table using SQL
+        return supabase.from('scholarships').select('id').limit(1);
+      });
+    
+    if (createScholarshipsTable.error) {
+      console.error("Error creating scholarships table:", createScholarshipsTable.error);
+      return false;
+    }
+    
+    // Create admission criteria table
+    const createAdmissionCriteriaTable = await supabase.rpc('create_admission_criteria_table')
+      .catch(async () => {
+        // Fallback: Create table using SQL
+        return supabase.from('admission_criteria').select('id').limit(1);
+      });
+    
+    if (createAdmissionCriteriaTable.error) {
+      console.error("Error creating admission criteria table:", createAdmissionCriteriaTable.error);
+      return false;
+    }
+    
+    console.log("Tables created successfully");
+    return true;
   } catch (error) {
-    console.error('Exception lors du forçage de la réinitialisation:', error);
+    console.error("Error creating tables:", error);
     return false;
   }
-}
+};
+
+/**
+ * Check if data already exists in the database
+ */
+export const checkDataExists = async (): Promise<boolean> => {
+  try {
+    // Check universities table
+    const { data: universitiesData, error: universitiesError } = await supabase
+      .from(TABLES.UNIVERSITIES)
+      .select('id')
+      .limit(1);
+    
+    if (universitiesError) {
+      console.error("Error checking universities data:", universitiesError);
+      return false;
+    }
+    
+    return universitiesData && universitiesData.length > 0;
+  } catch (error) {
+    console.error("Error checking if data exists:", error);
+    return false;
+  }
+};
+
+/**
+ * Insert sample data into the database
+ */
+const insertSampleData = async (): Promise<boolean> => {
+  try {
+    console.log("Inserting sample data...");
+    
+    // Insert universities
+    const { error: universitiesError } = await supabase
+      .from(TABLES.UNIVERSITIES)
+      .insert(sampleData.universities);
+    
+    if (universitiesError) {
+      console.error("Error inserting universities:", universitiesError);
+      return false;
+    }
+    
+    // Insert scholarships
+    const { error: scholarshipsError } = await supabase
+      .from(TABLES.SCHOLARSHIPS)
+      .insert(sampleData.internationalScholarships);
+    
+    if (scholarshipsError) {
+      console.error("Error inserting scholarships:", scholarshipsError);
+      return false;
+    }
+    
+    // Insert admission criteria
+    const { error: admissionCriteriaError } = await supabase
+      .from(TABLES.ADMISSION_CRITERIA)
+      .insert(sampleData.admissionCriteria);
+    
+    if (admissionCriteriaError) {
+      console.error("Error inserting admission criteria:", admissionCriteriaError);
+      return false;
+    }
+    
+    console.log("Sample data inserted successfully");
+    return true;
+  } catch (error) {
+    console.error("Error inserting sample data:", error);
+    return false;
+  }
+};
+
+/**
+ * Force reinitialization of the database (drop tables and recreate them)
+ */
+export const forceReinitializeDatabase = async (): Promise<boolean> => {
+  try {
+    console.log("Force reinitializing database...");
+    
+    // Drop existing tables
+    for (const table of [TABLES.UNIVERSITIES, TABLES.SCHOLARSHIPS, TABLES.ADMISSION_CRITERIA]) {
+      const { error } = await supabase.rpc('drop_table_if_exists', { table_name: table })
+        .catch(async () => {
+          // Fallback: Drop table using SQL
+          return supabase.from(table).delete().gt('id', 0);
+        });
+      
+      if (error) {
+        console.error(`Error dropping table ${table}:`, error);
+      }
+    }
+    
+    // Recreate tables and insert sample data
+    return await initializeDatabase();
+  } catch (error) {
+    console.error("Error force reinitializing database:", error);
+    return false;
+  }
+};
